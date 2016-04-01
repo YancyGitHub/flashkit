@@ -103,6 +103,42 @@ setStyle()
 }
 
 # --------------------------
+# 只有一个参数： 参数即为显示的文本
+# 两个参数： $1 为文本风格； $2 为显示的文本
+# 三个参数： $1 $2 为文本风格； $3 为显示的文本
+# 四个参数： $1 $2 $3 为文本风格； $4 为显示的文本
+# --------------------------
+msgPrint()
+{
+    if [ $# == 1 ]; then
+        echo -n $1
+    elif [ $# == 2 ]; then
+        echo -n -e "$1 $2"
+    elif [ $# == 3 ]; then
+        echo -n -e "$1 $2" $3
+    elif [ $# == 4 ]; then
+        echo -n -e "$1 $2 $3" $4
+    fi
+
+    echo -e -n "${DEFAULT_STYLE}"
+}
+
+msgPrintln()
+{
+    if [ $# == 1 ]; then
+        echo $1
+    elif [ $# == 2 ]; then
+        echo -e "$1 $2"
+    elif [ $# == 3 ]; then
+        echo -e "$1 $2" $3
+    elif [ $# == 4 ]; then
+        echo -e "$1 $2 $3" $4
+    fi
+
+    echo -e -n "${DEFAULT_STYLE}"
+}
+
+# --------------------------
 # $1 : 显示的提示信息
 # $2 : 默认值(直接回车传递的参数)： Y/y N/n 空
 # return : Y/y 返回0；N/n 返回1
@@ -186,6 +222,19 @@ kit_check_phone_state()
 	fi
 }
 
+# 判断当前是否处于 fastboot 模式
+kit_is_fastboot_mode()
+{
+    local temp;
+    temp = `fastboot devices`
+
+    if [ "$temp" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # --------------------------
 # 检查手机链接状态。该函数会检查手机的链接状态
 # return：
@@ -194,6 +243,11 @@ kit_check_phone_state()
 # --------------------------
 kit_open_fastboot_mode()
 {
+    if kit_is_fastboot_mode ; then
+        msgPrintln ${FG_COLOR_YELLOW} "已经处于 Fastboot 模式"
+        return 0
+    fi
+
 	if kit_check_phone_state ; then
 		
 		setStyle "${FG_COLOR_YELLOW}"

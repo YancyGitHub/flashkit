@@ -8,13 +8,13 @@
 # 	    Chongyang.Hu    2015-11-09  Remove flex
 #       Chongyang.Hu    2015-11-19  Add Qualcomm flash file
 # ******************************************
-SCRIPT_VERSION="2.0.0"
+SCRIPT_VERSION="2.0.1"
 
 # ******************************************
 #  		Constans Area	
 # ******************************************
-SCRIPT_BIN_DIR=
-COMPILE_PROJECT="simcom_72"
+SCRIPT_BIN_DIR="./bin"
+COMPILE_PROJECT="aosp_arm"
 
 COMPRESS_ROM_PACKAGE=false
 SIGN_ROM_SUPPORT=false
@@ -39,6 +39,8 @@ source kit_common.sh
 
 runScript()
 {
+    #color_demo
+
 	scriptInfo
 	show_main_menu
 }
@@ -55,9 +57,7 @@ scriptInfo()
 	echo -e "  ** 刷机脚本 FOR ${TEXT_BOLD}${FG_COLOR_RED}${COMPILE_PROJECT}${DEFAULT_STYLE}"
 	printf "******************************************"
 	
-	setStyle "${TEXT_BOLD} ${FG_COLOR_BLUE}"
-	printf "需要解除手机的 bootloader 锁才能使用该脚本刷机"
-	setStyle
+	msgPrintln ${TEXT_BOLD} ${FG_COLOR_BLUE} "需要解除手机的 bootloader 锁才能使用该脚本刷机"
 }
 
 # ------------------------------------------
@@ -103,9 +103,9 @@ MAIN_MENU_ITEM=(
 "制作刷机包@ID_make_rom"
 "刷机@ID_flash_rom"
 "恢复出厂设置@ID_factory_reset"
-"重启到android系统@ID_reboot_android"
+"重启到 android 系统@ID_reboot_android"
 "重启到 Fastboot 模式@ID_reboot_fastboot"
-"恢复命令行主题颜色@ID_ter_def-color"
+#"恢复命令行主题颜色@ID_ter_def-color"
 "退出@ID_quit"
 )
 
@@ -321,40 +321,37 @@ make_not_sign_rom()
 {
 	local imageBinDir
 	
-	setStyle "${FG_COLOR_GREEN}"
-	echo ">>> 删除旧的刷机包..."
-	setStyle
+	msgPrintln "${FG_COLOR_GREEN}" ">>> 删除旧的刷机包..."
+
 	find . -maxdepth 1 -regextype "sed" -regex ".*${COMPILE_PROJECT}_ImageBin_[0-9]\{8\}" -exec rm -rf {} \;
 	find . -maxdepth 1 -regextype "sed" -regex ".*${COMPILE_PROJECT}_ImageBin_[0-9]\{8\}.zip" -exec rm -rf {} \;
 
-	setStyle "${FG_COLOR_GREEN}"
-	echo ">>> 创建ImageBin目录..."
-	setStyle
+	msgPrintln ${FG_COLOR_GREEN} ">>> 创建ImageBin目录..."
+
 	imageBinDir=${COMPILE_PROJECT}_ImageBin_`date +%Y%m%d`
 	mkdir ${imageBinDir}
 
-	setStyle "${FG_COLOR_GREEN}"
-	echo ">>> 开始拷贝镜像文件..."
-	setStyle
+	msgPrintln ${FG_COLOR_GREEN} ">>> 开始拷贝镜像文件..."
+
 	find "${PRODUCT_DIR}" -maxdepth 1 -type f -exec cp -v {} ./${imageBinDir} \;
 
 	if ${COMPRESS_ROM_PACKAGE} ; then
-		setStyle "${FG_COLOR_GREEN}"
-		echo ">>> 开始制作压缩包..."
-		setStyle
+		msgPrintln ${FG_COLOR_GREEN} ">>> 开始制作压缩包..."
+
 		zip -r ${imageBinDir}.zip  ${imageBinDir}
 	fi
 	
-	setStyle "${TEXT_BOLD} ${FG_COLOR_YELLOW}"
 	if ${COMPRESS_ROM_PACKAGE} ; then
-		echo ">>> 完成..." 
-		echo -e ">>> 刷机包目录: ${FG_COLOR_RED}${imageBinDir}${FG_COLOR_YELLOW}"
-		echo -e ">>> 压缩包: ${FG_COLOR_RED}${imageBinDir}.zip${FG_COLOR_YELLOW}"
+	    msgPrintln ${TEXT_BOLD} ${FG_COLOR_YELLOW} ">>> 完成..."
+	    msgPrint ${TEXT_BOLD} ${FG_COLOR_YELLOW} ">>>  刷机包目录: "
+		msgPrintln ${FG_COLOR_RED} "${imageBinDir}"
+		msgPrint ${TEXT_BOLD} ${FG_COLOR_YELLOW} ">>> 压缩包: "
+		msgPrintln ${FG_COLOR_RED} "${imageBinDir}.zip${FG_COLOR_YELLOW}"
 	else
-		echo -e ">>> 完成..." 
-		echo -e ">>> 刷机包目录: ${FG_COLOR_RED}${imageBinDir}${FG_COLOR_YELLOW}"
+		msgPrintln ${TEXT_BOLD} ${FG_COLOR_YELLOW} ">>> 完成..."
+		msgPrintln ${TEXT_BOLD} ${FG_COLOR_YELLOW} ">>> 刷机包目录: ${FG_COLOR_RED}${imageBinDir}${FG_COLOR_YELLOW}"
 	fi
-	setStyle
+
 }
 
 make_sign_rom()
@@ -419,9 +416,7 @@ oneKeyFlash()
 
 handle_one_key_flash()
 {
-	setStyle "${TEXT_BLOB} ${FG_COLOR_BLUE}"
-	printf " ****** 一键刷机 ****** "
-	setStyle
+	msgPrintln ${TEXT_BLOB} ${FG_COLOR_BLUE} " ****** 一键刷机 ****** "
 	
 	local defVal="Y"
 	local msg="是否需要恢复出厂设置？(Y/N): [${defVal}] "
@@ -441,9 +436,7 @@ handle_one_key_flash()
 
 handle_flash_boot_rec()
 {
-	setStyle "${TEXT_BLOB} ${FG_COLOR_BLUE}"
-	printf " ****** 写引导记录 ****** "
-	setStyle
+	msgPrintln ${TEXT_BLOB} ${FG_COLOR_BLUE} " ****** 写引导记录 ****** "
 	
 	if kit_open_fastboot_mode ; then
 		
@@ -461,9 +454,7 @@ handle_flash_boot_rec()
 
 handle_flash_system_img()
 {
-	setStyle "${TEXT_BLOB} ${FG_COLOR_BLUE}"
-	printf " ****** 写 system.img ******"
-	setStyle
+	msgPrintln ${TEXT_BLOB} ${FG_COLOR_BLUE} " ****** 写 system.img ******"
 	
 	if kit_open_fastboot_mode ; then
 		kit_flash "${PARTITION_SYSTEM}" "${PRODUCT_DIR}" "system.img"
@@ -473,9 +464,7 @@ handle_flash_system_img()
 
 handle_flash_boot_img()
 {
-	setStyle "${TEXT_BLOB} ${FG_COLOR_BLUE}"
-	printf " ****** 写 boot.img ******"
-	setStyle
+	msgPrintln ${TEXT_BLOB} ${FG_COLOR_BLUE} " ****** 写 boot.img ******"
 	
 	if kit_open_fastboot_mode ; then
 		kit_flash "boot" "${PRODUCT_DIR}" "boot.img"
@@ -485,9 +474,7 @@ handle_flash_boot_img()
 
 handle_flash_uboot()
 {
-	setStyle "${TEXT_BLOB} ${FG_COLOR_BLUE}"
-	printf " ****** 写 uboot ****** "
-	setStyle
+	msgPrintln ${TEXT_BLOB} ${FG_COLOR_BLUE} " ****** 写 uboot ****** "
 	
 	if kit_open_fastboot_mode ; then
 		kit_flash "uboot" "${PRODUCT_DIR}" "lk.bin"
@@ -497,9 +484,7 @@ handle_flash_uboot()
 
 handle_flash_recovery()
 {
-	setStyle "${TEXT_BLOB} ${FG_COLOR_BLUE}"
-	printf " ****** 写 recovery.img ****** "
-	setStyle
+	msgPrintln ${TEXT_BLOB} ${FG_COLOR_BLUE} " ****** 写 recovery.img ****** "
 	
 	if kit_open_fastboot_mode ; then
 		kit_flash "recovery" "${PRODUCT_DIR}" "recovery.img"
